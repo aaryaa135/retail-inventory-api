@@ -1,0 +1,27 @@
+[tool.black]
+line-length = 100
+target-version = ["py310"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+lint.select = ["E","F","I","UP","B","SIM"]
+lint.ignore = ["E501"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.pytest.ini_options]
+testpaths = ["app/tests"]
+pythonpath = ["."]
+addopts = "-v --strict-markers"
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["app/tests/*"]
+
+[project]
+name = "retail-inventory-api"
+version = "1.0.0"
+description = "Retail Inventory Management API - FastAPI + PostgreSQL + TDD"
+requires-python = ">=3.10"
