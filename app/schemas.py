@@ -1,11 +1,11 @@
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List
 from datetime import datetime
 from app.models import OrderStatus
 
 
 class CategoryBase(BaseModel):
-    name: str = Field(..., min_length=1, max_length=100, example="Electronics")
+    name: str = Field(..., min_length=1, max_length=100, json_schema_extra={"example": "Electronics"})
     description: Optional[str] = Field(None, max_length=255)
 
 class CategoryCreate(CategoryBase):
@@ -18,15 +18,14 @@ class CategoryUpdate(BaseModel):
 class CategoryResponse(CategoryBase):
     id: int
     created_at: datetime
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class ProductBase(BaseModel):
-    name: str = Field(..., min_length=1, max_length=200, example="Wireless Headphones")
-    sku: str = Field(..., min_length=1, max_length=50, example="WH-1000XM5")
+    name: str = Field(..., min_length=1, max_length=200, json_schema_extra={"example": "Wireless Headphones"})
+    sku: str = Field(..., min_length=1, max_length=50, json_schema_extra={"example": "WH-1000XM5"})
     description: Optional[str] = Field(None, max_length=500)
-    price: float = Field(..., gt=0, example=299.99)
+    price: float = Field(..., gt=0, json_schema_extra={"example": 299.99})
     category_id: Optional[int] = None
 
 class ProductCreate(ProductBase):
@@ -43,14 +42,13 @@ class ProductResponse(ProductBase):
     created_at: datetime
     updated_at: Optional[datetime] = None
     category: Optional[CategoryResponse] = None
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class InventoryCreate(BaseModel):
     product_id: int
-    quantity: int = Field(..., ge=0, example=100)
-    low_stock_threshold: int = Field(10, ge=0, example=10)
+    quantity: int = Field(..., ge=0, json_schema_extra={"example": 100})
+    low_stock_threshold: int = Field(10, ge=0, json_schema_extra={"example": 10})
 
 class InventoryUpdate(BaseModel):
     quantity: Optional[int] = Field(None, ge=0)
@@ -63,8 +61,7 @@ class InventoryResponse(BaseModel):
     low_stock_threshold: int
     updated_at: Optional[datetime] = None
     is_low_stock: bool = False
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class LowStockAlert(BaseModel):
     product_id: int
@@ -77,7 +74,7 @@ class LowStockAlert(BaseModel):
 
 class OrderItemCreate(BaseModel):
     product_id: int
-    quantity: int = Field(..., gt=0, example=2)
+    quantity: int = Field(..., gt=0, json_schema_extra={"example": 2})
 
 class OrderCreate(BaseModel):
     items: List[OrderItemCreate] = Field(..., min_length=1)
@@ -88,8 +85,7 @@ class OrderItemResponse(BaseModel):
     quantity: int
     unit_price: float
     subtotal: float = 0.0
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class OrderResponse(BaseModel):
     id: int
@@ -98,5 +94,4 @@ class OrderResponse(BaseModel):
     items: List[OrderItemResponse] = []
     created_at: datetime
     updated_at: Optional[datetime] = None
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

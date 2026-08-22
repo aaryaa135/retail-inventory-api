@@ -14,7 +14,7 @@ def create_product(product: schemas.ProductCreate, db: Session = Depends(get_db)
     if product.category_id:
         if not db.query(models.Category).filter(models.Category.id == product.category_id).first():
             raise HTTPException(status_code=404, detail="Category not found")
-    db_product = models.Product(**product.dict())
+    db_product = models.Product(**product.model_dump())
     db.add(db_product)
     db.commit()
     db.refresh(db_product)
@@ -56,7 +56,7 @@ def update_product(product_id: int, updates: schemas.ProductUpdate, db: Session 
     if updates.category_id:
         if not db.query(models.Category).filter(models.Category.id == updates.category_id).first():
             raise HTTPException(status_code=404, detail="Category not found")
-    for field, value in updates.dict(exclude_unset=True).items():
+    for field, value in updates.model_dump(exclude_unset=True).items():
         setattr(product, field, value)
     db.commit()
     db.refresh(product)
@@ -68,5 +68,12 @@ def delete_product(product_id: int, db: Session = Depends(get_db)):
     product = db.query(models.Product).filter(models.Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
-    db.delete(product)
-    db.commit()
+    # Prevent 500 when order_items reference product (RESTRICT)
+    if db.query(models.OrderItem).filter(models.OrderItem.product_id == product_id).first():
+        raise HTTPException(status_code=409, detail="Cannot delete product with existing orders")
+    try:
+        db.delete(product)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Cannot delete product with existing orders") from e

@@ -12,7 +12,7 @@ def create_category(category: schemas.CategoryCreate, db: Session = Depends(get_
     existing = db.query(models.Category).filter(models.Category.name == category.name).first()
     if existing:
         raise HTTPException(status_code=409, detail=f"Category '{category.name}' already exists")
-    db_cat = models.Category(**category.dict())
+    db_cat = models.Category(**category.model_dump())
     db.add(db_cat)
     db.commit()
     db.refresh(db_cat)
@@ -37,7 +37,7 @@ def update_category(category_id: int, updates: schemas.CategoryUpdate, db: Sessi
     cat = db.query(models.Category).filter(models.Category.id == category_id).first()
     if not cat:
         raise HTTPException(status_code=404, detail="Category not found")
-    for field, value in updates.dict(exclude_unset=True).items():
+    for field, value in updates.model_dump(exclude_unset=True).items():
         setattr(cat, field, value)
     db.commit()
     db.refresh(cat)
@@ -49,5 +49,12 @@ def delete_category(category_id: int, db: Session = Depends(get_db)):
     cat = db.query(models.Category).filter(models.Category.id == category_id).first()
     if not cat:
         raise HTTPException(status_code=404, detail="Category not found")
-    db.delete(cat)
-    db.commit()
+    # Prevent 500 when products still reference category (ondelete=SET NULL now, but guard for old DBs)
+    if db.query(models.Product).filter(models.Product.category_id == category_id).first():
+        raise HTTPException(status_code=409, detail="Cannot delete category with existing products")
+    try:
+        db.delete(cat)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Cannot delete category with existing products") from e

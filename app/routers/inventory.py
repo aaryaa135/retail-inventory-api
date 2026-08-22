@@ -13,7 +13,7 @@ def create_inventory(inv: schemas.InventoryCreate, db: Session = Depends(get_db)
         raise HTTPException(status_code=404, detail="Product not found")
     if db.query(models.Inventory).filter(models.Inventory.product_id == inv.product_id).first():
         raise HTTPException(status_code=409, detail="Inventory already exists for this product. Use PUT to update.")
-    db_inv = models.Inventory(**inv.dict())
+    db_inv = models.Inventory(**inv.model_dump())
     db.add(db_inv)
     db.commit()
     db.refresh(db_inv)
@@ -71,7 +71,7 @@ def update_inventory(product_id: int, updates: schemas.InventoryUpdate, db: Sess
     inv = db.query(models.Inventory).filter(models.Inventory.product_id == product_id).first()
     if not inv:
         raise HTTPException(status_code=404, detail="Inventory not found")
-    for field, value in updates.dict(exclude_unset=True).items():
+    for field, value in updates.model_dump(exclude_unset=True).items():
         setattr(inv, field, value)
     db.commit()
     db.refresh(inv)
