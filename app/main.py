@@ -1,10 +1,12 @@
 import os
 from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
-from app.routers import products, categories, inventory, orders
+
 from app.database import Base, engine
+from app.routers import categories, inventory, orders, products
 
 
 @asynccontextmanager
@@ -13,7 +15,9 @@ async def lifespan(app: FastAPI):
     # Fallback for local SQLite dev / tests where Alembic hasn't run yet
     if os.getenv("AUTO_CREATE_TABLES", "true").lower() == "true":
         import time
+
         from sqlalchemy.exc import OperationalError
+
         for attempt in range(10):
             try:
                 Base.metadata.create_all(bind=engine)
@@ -150,6 +154,7 @@ code{background:#1e293b;padding:2px 6px;border-radius:4px;font-size:.85rem}
 </body>
 </html>
     """
+
 
 @app.get("/health", tags=["Health"])
 def health():

@@ -1,6 +1,9 @@
 class TestInventoryCreation:
     def test_create_success(self, client, sample_product):
-        r = client.post("/api/v1/inventory/", json={"product_id": sample_product["id"], "quantity": 100, "low_stock_threshold": 15})
+        r = client.post(
+            "/api/v1/inventory/",
+            json={"product_id": sample_product["id"], "quantity": 100, "low_stock_threshold": 15},
+        )
         assert r.status_code == 201
         assert r.json()["quantity"] == 100
         assert r.json()["is_low_stock"] is False
@@ -11,11 +14,15 @@ class TestInventoryCreation:
 
     def test_duplicate_returns_409(self, client, sample_product):
         client.post("/api/v1/inventory/", json={"product_id": sample_product["id"], "quantity": 10})
-        r = client.post("/api/v1/inventory/", json={"product_id": sample_product["id"], "quantity": 20})
+        r = client.post(
+            "/api/v1/inventory/", json={"product_id": sample_product["id"], "quantity": 20}
+        )
         assert r.status_code == 409
 
     def test_negative_quantity_rejected(self, client, sample_product):
-        r = client.post("/api/v1/inventory/", json={"product_id": sample_product["id"], "quantity": -5})
+        r = client.post(
+            "/api/v1/inventory/", json={"product_id": sample_product["id"], "quantity": -5}
+        )
         assert r.status_code == 422
 
 
@@ -25,16 +32,24 @@ class TestInventoryUpdate:
         assert r.json()["quantity"] == 200
 
     def test_update_threshold(self, client, sample_inventory, sample_product):
-        r = client.put(f"/api/v1/inventory/{sample_product['id']}", json={"low_stock_threshold": 25})
+        r = client.put(
+            f"/api/v1/inventory/{sample_product['id']}", json={"low_stock_threshold": 25}
+        )
         assert r.json()["low_stock_threshold"] == 25
 
     def test_is_low_stock_true_at_threshold(self, client, sample_product):
-        client.post("/api/v1/inventory/", json={"product_id": sample_product["id"], "quantity": 10, "low_stock_threshold": 10})
+        client.post(
+            "/api/v1/inventory/",
+            json={"product_id": sample_product["id"], "quantity": 10, "low_stock_threshold": 10},
+        )
         r = client.get(f"/api/v1/inventory/{sample_product['id']}")
         assert r.json()["is_low_stock"] is True
 
     def test_is_low_stock_false_above_threshold(self, client, sample_product):
-        client.post("/api/v1/inventory/", json={"product_id": sample_product["id"], "quantity": 50, "low_stock_threshold": 10})
+        client.post(
+            "/api/v1/inventory/",
+            json={"product_id": sample_product["id"], "quantity": 50, "low_stock_threshold": 10},
+        )
         r = client.get(f"/api/v1/inventory/{sample_product['id']}")
         assert r.json()["is_low_stock"] is False
 
@@ -42,7 +57,10 @@ class TestInventoryUpdate:
 class TestLowStockAlerts:
     def _make(self, client, name, sku, qty, threshold):
         p = client.post("/api/v1/products/", json={"name": name, "sku": sku, "price": 10.0}).json()
-        client.post("/api/v1/inventory/", json={"product_id": p["id"], "quantity": qty, "low_stock_threshold": threshold})
+        client.post(
+            "/api/v1/inventory/",
+            json={"product_id": p["id"], "quantity": qty, "low_stock_threshold": threshold},
+        )
         return p
 
     def test_returns_only_below_threshold(self, client):

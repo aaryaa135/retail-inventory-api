@@ -2,6 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+
 from app.database import Base, get_db
 from app.main import app
 
@@ -30,22 +31,30 @@ def client():
 
 @pytest.fixture
 def sample_category(client):
-    resp = client.post("/api/v1/categories/", json={"name": "Electronics", "description": "Tech products"})
+    resp = client.post(
+        "/api/v1/categories/", json={"name": "Electronics", "description": "Tech products"}
+    )
     return resp.json()
 
 
 @pytest.fixture
 def sample_product(client, sample_category):
-    resp = client.post("/api/v1/products/", json={
-        "name": "Wireless Headphones", "sku": "WH-001",
-        "price": 299.99, "category_id": sample_category["id"]
-    })
+    resp = client.post(
+        "/api/v1/products/",
+        json={
+            "name": "Wireless Headphones",
+            "sku": "WH-001",
+            "price": 299.99,
+            "category_id": sample_category["id"],
+        },
+    )
     return resp.json()
 
 
 @pytest.fixture
 def sample_inventory(client, sample_product):
-    resp = client.post("/api/v1/inventory/", json={
-        "product_id": sample_product["id"], "quantity": 50, "low_stock_threshold": 10
-    })
+    resp = client.post(
+        "/api/v1/inventory/",
+        json={"product_id": sample_product["id"], "quantity": 50, "low_stock_threshold": 10},
+    )
     return resp.json()

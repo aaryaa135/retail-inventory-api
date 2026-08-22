@@ -1,7 +1,9 @@
-from sqlalchemy import Column, Integer, String, Float, Numeric, ForeignKey, DateTime, Enum
+import enum
+
+from sqlalchemy import Column, DateTime, Enum, ForeignKey, Integer, Numeric, String
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-import enum
+
 from app.database import Base
 
 
@@ -31,14 +33,18 @@ class Product(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     category = relationship("Category", back_populates="products")
-    inventory = relationship("Inventory", back_populates="product", uselist=False, cascade="all, delete-orphan")
+    inventory = relationship(
+        "Inventory", back_populates="product", uselist=False, cascade="all, delete-orphan"
+    )
     order_items = relationship("OrderItem", back_populates="product")
 
 
 class Inventory(Base):
     __tablename__ = "inventory"
     id = Column(Integer, primary_key=True, index=True)
-    product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"), unique=True, nullable=False)
+    product_id = Column(
+        Integer, ForeignKey("products.id", ondelete="CASCADE"), unique=True, nullable=False
+    )
     quantity = Column(Integer, default=0, nullable=False)
     low_stock_threshold = Column(Integer, default=10, nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
@@ -48,7 +54,9 @@ class Inventory(Base):
 class Order(Base):
     __tablename__ = "orders"
     id = Column(Integer, primary_key=True, index=True)
-    status = Column(Enum(OrderStatus, native_enum=False), default=OrderStatus.PENDING, nullable=False)
+    status = Column(
+        Enum(OrderStatus, native_enum=False), default=OrderStatus.PENDING, nullable=False
+    )
     total_amount = Column(Numeric(10, 2), nullable=False, default=0.0)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

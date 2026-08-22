@@ -1,8 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import List
-from app.database import get_db
+
 from app import models, schemas
+from app.database import get_db
 
 router = APIRouter()
 
@@ -19,7 +19,7 @@ def create_category(category: schemas.CategoryCreate, db: Session = Depends(get_
     return db_cat
 
 
-@router.get("/", response_model=List[schemas.CategoryResponse])
+@router.get("/", response_model=list[schemas.CategoryResponse])
 def list_categories(db: Session = Depends(get_db)):
     return db.query(models.Category).all()
 
@@ -33,7 +33,9 @@ def get_category(category_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{category_id}", response_model=schemas.CategoryResponse)
-def update_category(category_id: int, updates: schemas.CategoryUpdate, db: Session = Depends(get_db)):
+def update_category(
+    category_id: int, updates: schemas.CategoryUpdate, db: Session = Depends(get_db)
+):
     cat = db.query(models.Category).filter(models.Category.id == category_id).first()
     if not cat:
         raise HTTPException(status_code=404, detail="Category not found")
@@ -57,4 +59,6 @@ def delete_category(category_id: int, db: Session = Depends(get_db)):
         db.commit()
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=409, detail="Cannot delete category with existing products") from e
+        raise HTTPException(
+            status_code=409, detail="Cannot delete category with existing products"
+        ) from e
